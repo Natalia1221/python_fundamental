@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi Bilangan - Media Pembelajaran</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background: #f0f4f8; }
+        .gradient-primary { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+        .card-animate { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-animate:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .modal-bg { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        
+        /* Animasi Feedback */
+        @keyframes pop {
+            0% { transform: scale(0.9); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .correct { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; animation: pop 0.3s; }
+        .wrong { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; animation: pop 0.3s; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Container Utama -->
+    <div id="main-app" class="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden min-h-[650px] relative">
+        
+        <!-- Header -->
+        <div class="gradient-primary p-6 text-white flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">BinaryMaster v1.0</h1>
+                <p class="text-xs opacity-80">Media Pembelajaran Konversi Bilangan</p>
+            </div>
+            <div id="user-info" class="hidden bg-white/20 px-4 py-2 rounded-full text-sm">
+                👤 <span id="display-name">Siswa</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar (Hanya muncul saat kuis) -->
+        <div id="quiz-progress-container" class="hidden w-full bg-gray-100 h-2">
+            <div id="quiz-progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+
+        <!-- Konten Dinamis -->
+        <div id="screen-container" class="p-8">
+            
+            <!-- 1. Screen Welcome -->
+            <div id="screen-welcome" class="text-center py-12 space-y-8">
+                <div class="space-y-4">
+                    <h2 class="text-4xl font-bold text-gray-800">Siap Menjadi Ahli Digital?</h2>
+                    <p class="text-gray-600">Pelajari konversi Biner, Desimal, dan Heksadesimal untuk mendapatkan sertifikat resmi.</p>
+                </div>
+                <div class="max-w-md mx-auto">
+                    <input type="text" id="input-name" placeholder="Masukkan Nama Lengkap Anda" class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 outline-none text-center text-xl font-semibold mb-4 transition-all">
+                    <button onclick="toMateri()" class="w-full gradient-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:opacity-90 transition-all">Mulai Petualangan</button>
+                </div>
+            </div>
+
+            <!-- 2. Screen Materi -->
+            <div id="screen-materi" class="hidden space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-800">Pilih Materi Pembelajaran</h2>
+                    <p class="text-gray-500">Klik pada kartu untuk melihat penjelasan lengkap</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Card Biner -->
+                    <div onclick="openModal('biner')" class="card-animate bg-indigo-50 p-6 rounded-[2rem] border-2 border-indigo-100 cursor-pointer">
+                        <div class="text-4xl mb-4">🔢</div>
+                        <h3 class="text-xl font-bold text-indigo-800">Sistem Biner</h3>
+                        <p class="text-sm text-gray-600 mt-2">Bahasa mesin komputer yang hanya mengenal angka 0 dan 1...</p>
+                        <span class="inline-block mt-4 text-indigo-600 font-bold text-sm">Pelajari →</span>
+                    </div>
+                    <!-- Card Desimal -->
+                    <div onclick="openModal('desimal')" class="card-animate bg-emerald-50 p-6 rounded-[2rem] border-2 border-emerald-100 cursor-pointer">
+                        <div class="text-4xl mb-4">🔟</div>
+                        <h3 class="text-xl font-bold text-emerald-800">Sistem Desimal</h3>
+                        <p class="text-sm text-gray-600 mt-2">Sistem bilangan basis 10 yang kita gunakan sehari-hari...</p>
+                        <span class="inline-block mt-4 text-emerald-600 font-bold text-sm">Pelajari →</span>
+                    </div>
+                    <!-- Card Heksa -->
+                    <div onclick="openModal('heksa')" class="card-animate bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100 cursor-pointer">
+                        <div class="text-4xl mb-4">🔠</div>
+                        <h3 class="text-xl font-bold text-purple-800">Heksadesimal</h3>
+                        <p class="text-sm text-gray-600 mt-2">Sistem basis 16 yang menggunakan angka dan huruf A-F...</p>
+                        <span class="inline-block mt-4 text-purple-600 font-bold text-sm">Pelajari →</span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button onclick="toQuiz()" class="bg-gray-800 text-white px-12 py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-xl">Saya Sudah Paham, Mulai Kuis! 🚀</button>
+                </div>
+            </div>
+
+            <!-- 3. Screen Quiz -->
+            <div id="screen-quiz" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-xl font-bold text-gray-700">Pertanyaan <span id="q-num">1</span>/10</h3>
+                    <div class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold">Skor: <span id="q-score">0</span></div>
+                </div>
+
+                <div id="quiz-area" class="space-y-6 text-center">
+                    <p id="q-text" class="text-2xl font-bold text-gray-800 mb-8 px-4">Memuat soal...</p>
+                    <div id="q-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Options via JS -->
+                    </div>
+                    <div id="q-feedback" class="h-8 font-bold text-lg mt-4"></div>
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden mx-auto bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg">Lanjut Ke Soal Berikutnya →</button>
+                </div>
+            </div>
+
+            <!-- 4. Screen Result -->
+            <div id="screen-result" class="hidden text-center py-8 space-y-6">
+                <div class="text-6xl">🎊</div>
+                <h2 class="text-3xl font-bold text-gray-800">Selamat, <span id="res-name">Nama</span>!</h2>
+                <p class="text-gray-600">Anda telah menyelesaikan semua soal konversi bilangan.</p>
+                
+                <div class="py-6 px-10 bg-indigo-50 border-2 border-indigo-100 rounded-3xl inline-block">
+                    <p class="text-sm uppercase tracking-widest text-indigo-400 font-bold mb-1">Skor Akhir</p>
+                    <div class="text-6xl font-black text-indigo-600"><span id="res-score">0</span><span class="text-2xl text-indigo-300">/10</span></div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center mt-8">
+                    <button onclick="downloadPDF()" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-green-700 transition-all flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Download Sertifikat PDF
+                    </button>
+                    <button onclick="location.reload()" class="bg-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-bold hover:bg-gray-300 transition-all">Ulangi Belajar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 text-center text-gray-400 text-xs border-t">
+            Guru Pengampu: <span class="font-bold text-gray-600">Natalia Matondang</span> • Media Pembelajaran Informatika 2024
+        </div>
+    </div>
+
+    <!-- Modal Materi Detail -->
+    <div id="modal-materi" class="modal-bg fixed inset-0 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white max-w-2xl w-full rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <div id="modal-header" class="p-8 text-white">
+                <h3 id="modal-title" class="text-3xl font-bold">Judul Materi</h3>
+            </div>
+            <div class="p-8">
+                <div id="modal-content" class="text-gray-600 leading-relaxed space-y-4">
+                    <!-- Konten dinamis -->
+                </div>
+                <button onclick="closeModal()" class="mt-8 w-full bg-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-200 transition-all">Tutup Penjelasan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Materi
+        const materiDetail = {
+            biner: {
+                title: "Sistem Bilangan Biner (Basis 2)",
+                color: "gradient-primary",
+                text: `
+                    <p><b>Apa itu Biner?</b><br>Biner adalah sistem bilangan yang hanya terdiri dari dua simbol, yaitu <b>0</b> dan <b>1</b>. Sistem ini merupakan dasar dari semua sistem komputer modern.</p>
+                    <p><b>Cara Konversi ke Desimal:</b><br>Kalikan setiap digit biner dengan 2 pangkat posisinya (dimulai dari kanan posisi 0).</p>
+                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 1011<br>(1×2³) + (0×2²) + (1×2¹) + (1×2⁰)<br>8 + 0 + 2 + 1 = 11</p>
+                `
+            },
+            desimal: {
+                title: "Sistem Bilangan Desimal (Basis 10)",
+                color: "bg-emerald-600",
+                text: `
+                    <p><b>Apa itu Desimal?</b><br>Sistem bilangan yang kita gunakan sehari-hari menggunakan basis 10 (angka 0, 1, 2, 3, 4, 5, 6, 7, 8, 9).</p>
+                    <p><b>Cara Konversi Desimal ke Biner:</b><br>Bagi bilangan desimal dengan angka 2 secara terus menerus sampai habis. Catat sisa baginya, lalu baca dari urutan terakhir ke awal.</p>
+                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 10 ke Biner<br>10/2 = 5 sisa 0<br>5/2 = 2 sisa 1<br>2/2 = 1 sisa 0<br>1/2 = 0 sisa 1<br>Hasil: 1010</p>
+                `
+            },
+            heksa: {
+                title: "Heksadesimal (Basis 16)",
+                color: "bg-purple-600",
+                text: `
+                    <p><b>Apa itu Heksadesimal?</b><br>Sistem bilangan yang menggunakan 16 simbol. Angka 0-9 dan huruf <b>A, B, C, D, E, F</b> (A=10 sampai F=15).</p>
+                    <p><b>Kegunaan:</b><br>Mempersingkat penulisan biner agar lebih mudah dibaca manusia, seperti pada kode warna HEX (#FFFFFF) atau alamat MAC.</p>
+                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 15 desimal = F heksa<br>16 desimal = 10 heksa</p>
+                `
+            }
+        };
+
+        // State & Logic
+        let studentName = "";
+        let currentQ = 0;
+        let score = 0;
+        let quizData = [];
+
+        function toMateri() {
+            const input = document.getElementById('input-name');
+            if(input.value.length < 3) return alert("Masukkan nama lengkap yang valid!");
+            studentName = input.value;
+            document.getElementById('display-name').innerText = studentName;
+            document.getElementById('user-info').classList.remove('hidden');
+            showScreen('screen-materi');
+        }
+
+        function showScreen(id) {
+            ['screen-welcome', 'screen-materi', 'screen-quiz', 'screen-result'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function openModal(key) {
+            const data = materiDetail[key];
+            document.getElementById('modal-header').className = "p-8 text-white " + (data.color.includes('gradient') ? data.color : data.color);
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-content').innerHTML = data.text;
+            document.getElementById('modal-materi').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-materi').classList.add('hidden');
+        }
+
+        function toQuiz() {
+            generateQuestions();
+            currentQ = 0;
+            score = 0;
+            document.getElementById('quiz-progress-container').classList.remove('hidden');
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function generateQuestions() {
+            quizData = [];
+            for(let i=0; i<10; i++) {
+                const type = Math.floor(Math.random() * 3);
+                const val = Math.floor(Math.random() * 31) + 1; // Angka 1-32
+                let q, a, opts = [];
+
+                if(type === 0) { // Dec to Bin
+                    q = `Berapakah nilai Biner dari Desimal ${val}?`;
+                    a = val.toString(2);
+                } else if(type === 1) { // Bin to Dec
+                    const bin = val.toString(2);
+                    q = `Berapakah nilai Desimal dari Biner ${bin}?`;
+                    a = val.toString();
+                } else { // Dec to Hex
+                    const hexVal = val + 10;
+                    q = `Berapakah nilai Heksadesimal dari Desimal ${hexVal}?`;
+                    a = hexVal.toString(16).toUpperCase();
+                }
+
+                opts = [a];
+                while(opts.length < 4) {
+                    let rand = (Math.floor(Math.random() * 50)).toString(type === 0 ? 2 : (type === 2 ? 16 : 10)).toUpperCase();
+                    if(!opts.includes(rand)) opts.push(rand);
+                }
+                quizData.push({ q, a, options: opts.sort(() => Math.random() - 0.5) });
+            }
+        }
+
+        function loadQuestion() {
+            const data = quizData[currentQ];
+            document.getElementById('q-num').innerText = currentQ + 1;
+            document.getElementById('q-text').innerText = data.q;
+            document.getElementById('q-score').innerText = score;
+            document.getElementById('quiz-progress-bar').style.width = ((currentQ + 1)/10 * 100) + "%";
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('q-feedback').innerText = "";
+
+            const optContainer = document.getElementById('q-options');
+            optContainer.innerHTML = "";
+            data.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "p-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-600 hover:border-indigo-300 transition-all text-lg";
+                btn.innerText = opt;
+                btn.onclick = (e) => checkAnswer(opt, e.target);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(choice, btn) {
+            const correct = quizData[currentQ].a;
+            const allBtns = document.querySelectorAll('#q-options button');
+            
+            allBtns.forEach(b => b.disabled = true);
+
+            if(choice === correct) {
+                btn.classList.add('correct');
+                document.getElementById('q-feedback').innerHTML = "<span class='text-emerald-500'>✅ Jawaban Anda Benar!</span>";
+                score++;
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('q-feedback').innerHTML = `<span class='text-red-500'>❌ Salah. Jawaban benar: ${correct}</span>`;
+                allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if(currentQ < 10) loadQuestion();
+            else finishQuiz();
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-progress-container').classList.add('hidden');
+            document.getElementById('res-name').innerText = studentName;
+            document.getElementById('res-score').innerText = score;
+            showScreen('screen-result');
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const w = doc.internal.pageSize.getWidth();
+            const h = doc.internal.pageSize.getHeight();
+
+            // Desain Sertifikat
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, 0, w, h, 'F');
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(5);
+            doc.rect(10, 10, w-20, h-20);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(45);
+            doc.setTextColor(30, 41, 59);
+            doc.text("SERTIFIKAT KELULUSAN", w/2, 50, { align: "center" });
+
+            doc.setFontSize(18);
+            doc.setTextColor(100);
+            doc.setFont("helvetica", "normal");
+            doc.text("Sertifikat ini diberikan sebagai bukti kompetensi kepada:", w/2, 70, { align: "center" });
+
+            doc.setFontSize(35);
+            doc.setTextColor(79, 70, 229);
+            doc.setFont("helvetica", "bold");
+            doc.text(studentName.toUpperCase(), w/2, 95, { align: "center" });
+
+            doc.setFontSize(16);
+            doc.setTextColor(50);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Telah menyelesaikan Materi Konversi Sistem Bilangan dengan Skor Akhir:`, w/2, 115, { align: "center" });
+            
+            doc.setFontSize(24);
+            doc.text(`${score} / 10 Soal Benar`, w/2, 130, { align: "center" });
+
+            doc.setFontSize(14);
+            const tgl = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+            doc.text(`Diterbitkan pada: ${tgl}`, w/2, 150, { align: "center" });
+
+            // Tanda Tangan
+            doc.setDrawColor(0);
+            doc.setLineWidth(0.5);
+            doc.line(w/2 - 40, 180, w/2 + 40, 180);
+            doc.setFont("helvetica", "bold");
+            doc.text("Natalia Matondang", w/2, 188, { align: "center" });
+            doc.setFont("helvetica", "normal");
+            doc.text("Guru Informatika", w/2, 195, { align: "center" });
+
+            doc.save(`Sertifikat_${studentName}.pdf`);
+        }
+    </script>
+</body>
+</html>
