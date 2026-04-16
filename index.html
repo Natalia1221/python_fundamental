@@ -3,217 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konversi Bilangan - Media Pembelajaran</title>
+    <title>Python Mastery - Media Pembelajaran Interaktif</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Quicksand', sans-serif; background: #f0f4f8; }
-        .gradient-primary { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
-        .card-animate { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-animate:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .modal-bg { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; }
+        .gradient-text { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-bg { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         
-        /* Animasi Feedback */
-        @keyframes pop {
-            0% { transform: scale(0.9); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .correct { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; animation: pop 0.3s; }
-        .wrong { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; animation: pop 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
+        
+        pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; font-family: 'Fira Code', monospace; font-size: 0.875rem; overflow-x: auto; }
+        .keyword { color: #f472b6; }
+        .func { color: #38bdf8; }
+        .string { color: #4ade80; }
+        .comment { color: #94a3b8; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <!-- Container Utama -->
-    <div id="main-app" class="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden min-h-[650px] relative">
+    <div id="app-container" class="max-w-6xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden min-h-[750px] flex flex-col border border-slate-100">
         
-        <!-- Header -->
-        <div class="gradient-primary p-6 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight">BinaryMaster v1.0</h1>
-                <p class="text-xs opacity-80">Media Pembelajaran Konversi Bilangan</p>
+        <!-- Header / Navbar -->
+        <header class="p-6 border-b border-slate-50 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <div class="gradient-bg p-2 rounded-xl shadow-lg shadow-blue-200">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tight">PyLogic<span class="text-blue-600">Lab</span></h1>
             </div>
-            <div id="user-info" class="hidden bg-white/20 px-4 py-2 rounded-full text-sm">
-                👤 <span id="display-name">Siswa</span>
+            <div id="user-badge" class="hidden flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full">
+                <div class="w-6 h-6 rounded-full gradient-bg flex items-center justify-center text-[10px] text-white font-bold" id="initial-name">?</div>
+                <span id="display-name" class="text-sm font-semibold text-slate-600 italic">Siswa</span>
             </div>
+        </header>
+
+        <!-- Progress Bar (Hanya saat kuis) -->
+        <div id="quiz-progress-container" class="hidden w-full h-1.5 bg-slate-100">
+            <div id="quiz-progress-bar" class="h-full gradient-bg transition-all duration-500" style="width: 0%"></div>
         </div>
 
-        <!-- Progress Bar (Hanya muncul saat kuis) -->
-        <div id="quiz-progress-container" class="hidden w-full bg-gray-100 h-2">
-            <div id="quiz-progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
-        </div>
-
-        <!-- Konten Dinamis -->
-        <div id="screen-container" class="p-8">
+        <!-- Main Content Area -->
+        <main class="flex-grow p-8 md:p-12 relative overflow-y-auto max-h-[75vh]">
             
-            <!-- 1. Screen Welcome -->
-            <div id="screen-welcome" class="text-center py-12 space-y-8">
+            <!-- SCREEN 1: Welcome & Login -->
+            <div id="screen-welcome" class="max-w-xl mx-auto text-center space-y-8 py-10 animate-fade">
                 <div class="space-y-4">
-                    <h2 class="text-4xl font-bold text-gray-800">Siap Menjadi Ahli Digital?</h2>
-                    <p class="text-gray-600">Pelajari konversi Biner, Desimal, dan Heksadesimal untuk mendapatkan sertifikat resmi.</p>
+                    <h2 class="text-5xl font-black text-slate-800 leading-tight">Selamat Datang di <span class="gradient-text">Python Mastery</span></h2>
+                    <p class="text-slate-500 text-lg">Pelajari logika fundamental pemrograman Python dan raih sertifikat kompetensimu hari ini!</p>
                 </div>
-                <div class="max-w-md mx-auto">
-                    <input type="text" id="input-name" placeholder="Masukkan Nama Lengkap Anda" class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 outline-none text-center text-xl font-semibold mb-4 transition-all">
-                    <button onclick="toMateri()" class="w-full gradient-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:opacity-90 transition-all">Mulai Petualangan</button>
-                </div>
-            </div>
-
-            <!-- 2. Screen Materi -->
-            <div id="screen-materi" class="hidden space-y-8">
-                <div class="text-center">
-                    <h2 class="text-3xl font-bold text-gray-800">Pilih Materi Pembelajaran</h2>
-                    <p class="text-gray-500">Klik pada kartu untuk melihat penjelasan lengkap</p>
-                </div>
-
-                <div class="grid md:grid-cols-3 gap-6">
-                    <!-- Card Biner -->
-                    <div onclick="openModal('biner')" class="card-animate bg-indigo-50 p-6 rounded-[2rem] border-2 border-indigo-100 cursor-pointer">
-                        <div class="text-4xl mb-4">🔢</div>
-                        <h3 class="text-xl font-bold text-indigo-800">Sistem Biner</h3>
-                        <p class="text-sm text-gray-600 mt-2">Bahasa mesin komputer yang hanya mengenal angka 0 dan 1...</p>
-                        <span class="inline-block mt-4 text-indigo-600 font-bold text-sm">Pelajari →</span>
-                    </div>
-                    <!-- Card Desimal -->
-                    <div onclick="openModal('desimal')" class="card-animate bg-emerald-50 p-6 rounded-[2rem] border-2 border-emerald-100 cursor-pointer">
-                        <div class="text-4xl mb-4">🔟</div>
-                        <h3 class="text-xl font-bold text-emerald-800">Sistem Desimal</h3>
-                        <p class="text-sm text-gray-600 mt-2">Sistem bilangan basis 10 yang kita gunakan sehari-hari...</p>
-                        <span class="inline-block mt-4 text-emerald-600 font-bold text-sm">Pelajari →</span>
-                    </div>
-                    <!-- Card Heksa -->
-                    <div onclick="openModal('heksa')" class="card-animate bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100 cursor-pointer">
-                        <div class="text-4xl mb-4">🔠</div>
-                        <h3 class="text-xl font-bold text-purple-800">Heksadesimal</h3>
-                        <p class="text-sm text-gray-600 mt-2">Sistem basis 16 yang menggunakan angka dan huruf A-F...</p>
-                        <span class="inline-block mt-4 text-purple-600 font-bold text-sm">Pelajari →</span>
-                    </div>
-                </div>
-
-                <div class="text-center mt-8">
-                    <button onclick="toQuiz()" class="bg-gray-800 text-white px-12 py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-xl">Saya Sudah Paham, Mulai Kuis! 🚀</button>
-                </div>
-            </div>
-
-            <!-- 3. Screen Quiz -->
-            <div id="screen-quiz" class="hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xl font-bold text-gray-700">Pertanyaan <span id="q-num">1</span>/10</h3>
-                    <div class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold">Skor: <span id="q-score">0</span></div>
-                </div>
-
-                <div id="quiz-area" class="space-y-6 text-center">
-                    <p id="q-text" class="text-2xl font-bold text-gray-800 mb-8 px-4">Memuat soal...</p>
-                    <div id="q-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Options via JS -->
-                    </div>
-                    <div id="q-feedback" class="h-8 font-bold text-lg mt-4"></div>
-                    <button id="next-btn" onclick="nextQuestion()" class="hidden mx-auto bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg">Lanjut Ke Soal Berikutnya →</button>
-                </div>
-            </div>
-
-            <!-- 4. Screen Result -->
-            <div id="screen-result" class="hidden text-center py-8 space-y-6">
-                <div class="text-6xl">🎊</div>
-                <h2 class="text-3xl font-bold text-gray-800">Selamat, <span id="res-name">Nama</span>!</h2>
-                <p class="text-gray-600">Anda telah menyelesaikan semua soal konversi bilangan.</p>
                 
-                <div class="py-6 px-10 bg-indigo-50 border-2 border-indigo-100 rounded-3xl inline-block">
-                    <p class="text-sm uppercase tracking-widest text-indigo-400 font-bold mb-1">Skor Akhir</p>
-                    <div class="text-6xl font-black text-indigo-600"><span id="res-score">0</span><span class="text-2xl text-indigo-300">/10</span></div>
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-4 justify-center mt-8">
-                    <button onclick="downloadPDF()" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-green-700 transition-all flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Download Sertifikat PDF
-                    </button>
-                    <button onclick="location.reload()" class="bg-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-bold hover:bg-gray-300 transition-all">Ulangi Belajar</button>
+                <div class="bg-slate-50 p-8 rounded-[2rem] border-2 border-slate-100 shadow-sm space-y-6">
+                    <div class="text-left">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap Siswa</label>
+                        <input type="text" id="input-name" placeholder="Masukkan nama Anda..." class="w-full px-6 py-4 rounded-2xl border-2 border-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-lg font-semibold transition-all shadow-inner">
+                    </div>
+                    <button onclick="startJourney()" class="w-full gradient-bg text-white py-5 rounded-2xl font-bold text-xl shadow-xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all">Mulai Belajar</button>
                 </div>
             </div>
-        </div>
+
+            <!-- SCREEN 2: Materi Cards -->
+            <div id="screen-materi" class="hidden space-y-10 animate-fade">
+                <div class="text-center space-y-2">
+                    <h2 class="text-4xl font-black text-slate-800">Modul Pembelajaran</h2>
+                    <p class="text-slate-500">Klik kartu materi untuk mempelajari sintaksis Python lebih dalam</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Card 1: Conditional -->
+                    <div onclick="showDetail('conditional')" class="card-hover glass p-8 rounded-[2.5rem] cursor-pointer group">
+                        <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800">Conditional</h3>
+                        <p class="text-slate-500 text-sm mt-2">Pengkondisian bertingkat menggunakan <code>if</code>, <code>elif</code>, dan <code>else</code>.</p>
+                        <div class="mt-6 font-bold text-blue-600 flex items-center gap-2">Pelajari Detail <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+                    </div>
+
+                    <!-- Card 2: Looping -->
+                    <div onclick="showDetail('looping')" class="card-hover glass p-8 rounded-[2.5rem] cursor-pointer group">
+                        <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800">Looping</h3>
+                        <p class="text-slate-500 text-sm mt-2">Perulangan cerdas dengan <code>for</code> dan <code>while</code> di Python.</p>
+                        <div class="mt-6 font-bold text-purple-600 flex items-center gap-2">Pelajari Detail <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+                    </div>
+
+                    <!-- Card 3: Functions -->
+                    <div onclick="showDetail('functions')" class="card-hover glass p-8 rounded-[2.5rem] cursor-pointer group">
+                        <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800">Functions</h3>
+                        <p class="text-slate-500 text-sm mt-2">Mendefinisikan fungsi dengan parameter dan nilai balik (return).</p>
+                        <div class="mt-6 font-bold text-indigo-600 flex items-center gap-2">Pelajari Detail <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center pt-8">
+                    <button onclick="startQuiz()" class="bg-slate-900 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-black transition-all shadow-2xl flex items-center gap-3">
+                        Mulai Latihan Game 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: Quiz/Game -->
+            <div id="screen-quiz" class="hidden max-w-3xl mx-auto space-y-8 animate-fade">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <span id="q-category" class="text-blue-600 font-bold text-xs uppercase tracking-widest">Kuis Python</span>
+                        <h3 class="text-3xl font-black text-slate-800">Soal <span id="q-idx">1</span>/10</h3>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">SCORE</p>
+                        <p class="text-3xl font-black text-blue-600" id="current-score">0</p>
+                    </div>
+                </div>
+
+                <div id="quiz-card" class="bg-white p-8 md:p-12 rounded-[3rem] border-2 border-slate-50 shadow-xl space-y-8">
+                    <div id="q-text" class="text-xl font-bold text-slate-700 leading-relaxed text-center italic px-4">
+                        Memuat pertanyaan...
+                    </div>
+                    
+                    <div id="options-grid" class="grid grid-cols-1 gap-4">
+                        <!-- Pilihan jawaban -->
+                    </div>
+
+                    <div id="feedback-area" class="hidden p-6 rounded-2xl text-center font-bold text-lg border-2 animate-fade">
+                        <!-- Feedback pesan -->
+                    </div>
+
+                    <button id="btn-next" onclick="nextQuestion()" class="hidden w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg">
+                        Lanjut ke Soal Berikutnya →
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: Results -->
+            <div id="screen-result" class="hidden text-center space-y-10 py-6 animate-fade">
+                <div class="text-8xl">🏆</div>
+                <div class="space-y-2">
+                    <h2 class="text-4xl font-black text-slate-800">Misi Selesai, <span id="res-name" class="gradient-text">Siswa</span>!</h2>
+                    <p class="text-slate-500">Kamu telah membuktikan keahlianmu dalam logika Python.</p>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="bg-blue-50 p-10 rounded-[3rem] border-4 border-blue-100 inline-block mb-10">
+                        <p class="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">Skor Akhir Kamu</p>
+                        <div class="text-8xl font-black text-blue-600" id="res-score">0</div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="downloadCert()" class="bg-emerald-500 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-emerald-600 transition-all flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download Sertifikat (PDF)
+                        </button>
+                        <button onclick="location.reload()" class="bg-slate-100 text-slate-600 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all">
+                            Ulangi Pelatihan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
 
         <!-- Footer -->
-        <div class="p-4 text-center text-gray-400 text-xs border-t">
-            Guru Pengampu: <span class="font-bold text-gray-600">Natalia Matondang</span> • Media Pembelajaran Informatika 2024
-        </div>
-    </div>
+        <footer class="p-6 bg-slate-50 border-t flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">© 2024 Python Master Lab • Versi 2.0</p>
+            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Guru Pendamping:</span>
+                <span class="text-xs font-extrabold text-blue-600">NATALIA MATONDANG</span>
+            </div>
+        </footer>
 
-    <!-- Modal Materi Detail -->
-    <div id="modal-materi" class="modal-bg fixed inset-0 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white max-w-2xl w-full rounded-[2.5rem] overflow-hidden shadow-2xl">
-            <div id="modal-header" class="p-8 text-white">
-                <h3 id="modal-title" class="text-3xl font-bold">Judul Materi</h3>
-            </div>
-            <div class="p-8">
-                <div id="modal-content" class="text-gray-600 leading-relaxed space-y-4">
-                    <!-- Konten dinamis -->
+        <!-- Modal Detail Materi -->
+        <div id="modal-materi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white max-w-4xl w-full rounded-[3rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fade">
+                <div class="p-10 overflow-y-auto">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <span id="modal-tag" class="text-blue-600 font-bold text-xs uppercase tracking-widest">Penjelasan Lengkap</span>
+                            <h3 id="modal-title" class="text-4xl font-black text-slate-800 mt-1">Judul Materi</h3>
+                        </div>
+                        <button onclick="closeModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-all">
+                            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div id="modal-body" class="space-y-6 text-slate-600 leading-relaxed text-lg">
+                        <!-- Konten dinamis -->
+                    </div>
                 </div>
-                <button onclick="closeModal()" class="mt-8 w-full bg-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-200 transition-all">Tutup Penjelasan</button>
+                <div class="p-6 border-t bg-slate-50 text-center">
+                    <button onclick="closeModal()" class="gradient-bg text-white px-12 py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-all">Saya Sudah Mengerti!</button>
+                </div>
             </div>
         </div>
+
     </div>
 
     <script>
-        // Data Materi
-        const materiDetail = {
-            biner: {
-                title: "Sistem Bilangan Biner (Basis 2)",
-                color: "gradient-primary",
-                text: `
-                    <p><b>Apa itu Biner?</b><br>Biner adalah sistem bilangan yang hanya terdiri dari dua simbol, yaitu <b>0</b> dan <b>1</b>. Sistem ini merupakan dasar dari semua sistem komputer modern.</p>
-                    <p><b>Cara Konversi ke Desimal:</b><br>Kalikan setiap digit biner dengan 2 pangkat posisinya (dimulai dari kanan posisi 0).</p>
-                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 1011<br>(1×2³) + (0×2²) + (1×2¹) + (1×2⁰)<br>8 + 0 + 2 + 1 = 11</p>
+        // DATA MATERI
+        const pythonMateri = {
+            conditional: {
+                title: "Conditional (Pengkondisian Bertingkat)",
+                tag: "Logical Decisions",
+                content: `
+                    <p>Python menggunakan <code>if</code>, <code>elif</code>, dan <code>else</code> untuk membuat keputusan berdasarkan kondisi tertentu.</p>
+                    <pre>
+<span class="comment"># Contoh Pengkondisian Bertingkat</span>
+nilai = 85
+
+<span class="keyword">if</span> nilai >= 90:
+    <span class="func">print</span>(<span class="string">"Grade A"</span>)
+<span class="keyword">elif</span> nilai >= 80:
+    <span class="func">print</span>(<span class="string">"Grade B"</span>) <span class="comment"># Kondisi ini yang akan terpenuhi</span>
+<span class="keyword">elif</span> nilai >= 70:
+    <span class="func">print</span>(<span class="string">"Grade C"</span>)
+<span class="keyword">else</span>:
+    <span class="func">print</span>(<span class="string">"Grade D"</span>)
+                    </pre>
+                    <p class="text-sm"><b>Aturan Penting:</b> Indentasi (spasi menjorok) wajib digunakan di Python untuk menentukan blok kode di dalam kondisi.</p>
                 `
             },
-            desimal: {
-                title: "Sistem Bilangan Desimal (Basis 10)",
-                color: "bg-emerald-600",
-                text: `
-                    <p><b>Apa itu Desimal?</b><br>Sistem bilangan yang kita gunakan sehari-hari menggunakan basis 10 (angka 0, 1, 2, 3, 4, 5, 6, 7, 8, 9).</p>
-                    <p><b>Cara Konversi Desimal ke Biner:</b><br>Bagi bilangan desimal dengan angka 2 secara terus menerus sampai habis. Catat sisa baginya, lalu baca dari urutan terakhir ke awal.</p>
-                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 10 ke Biner<br>10/2 = 5 sisa 0<br>5/2 = 2 sisa 1<br>2/2 = 1 sisa 0<br>1/2 = 0 sisa 1<br>Hasil: 1010</p>
+            looping: {
+                title: "Looping (For & While)",
+                tag: "Repetitive Logic",
+                content: `
+                    <p>Python memiliki dua jenis perulangan utama untuk menjalankan kode berulang kali.</p>
+                    <h4 class="font-bold text-slate-800">1. For Loop</h4>
+                    <p>Digunakan untuk mengulang elemen dalam urutan (list, string, range).</p>
+                    <pre>
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="func">range</span>(3):
+    <span class="func">print</span>(<span class="string">f"Iterasi ke-{i}"</span>)
+                    </pre>
+                    <h4 class="font-bold text-slate-800">2. While Loop</h4>
+                    <p>Terus berjalan selama kondisi tertentu bernilai <code>True</code>.</p>
+                    <pre>
+x = 0
+<span class="keyword">while</span> x < 3:
+    <span class="func">print</span>(<span class="string">"Jalan..."</span>)
+    x += 1
+                    </pre>
                 `
             },
-            heksa: {
-                title: "Heksadesimal (Basis 16)",
-                color: "bg-purple-600",
-                text: `
-                    <p><b>Apa itu Heksadesimal?</b><br>Sistem bilangan yang menggunakan 16 simbol. Angka 0-9 dan huruf <b>A, B, C, D, E, F</b> (A=10 sampai F=15).</p>
-                    <p><b>Kegunaan:</b><br>Mempersingkat penulisan biner agar lebih mudah dibaca manusia, seperti pada kode warna HEX (#FFFFFF) atau alamat MAC.</p>
-                    <p class="bg-gray-50 p-3 rounded-lg font-mono text-sm">Contoh: 15 desimal = F heksa<br>16 desimal = 10 heksa</p>
+            functions: {
+                title: "Functions (Fungsi)",
+                tag: "Reusable Code",
+                content: `
+                    <p>Fungsi dibungkus dengan kata kunci <code>def</code>. Fungsi bisa menerima data (parameter) dan mengembalikan data (return).</p>
+                    <h4 class="font-bold text-slate-800">1. Fungsi Tanpa Parameter</h4>
+                    <pre>
+<span class="keyword">def</span> <span class="func">sapa</span>():
+    <span class="func">print</span>(<span class="string">"Halo Siswa!"</span>)
+                    </pre>
+                    <h4 class="font-bold text-slate-800">2. Fungsi Dengan Parameter & Return</h4>
+                    <pre>
+<span class="keyword">def</span> <span class="func">tambah</span>(a, b):
+    <span class="keyword">return</span> a + b
+
+hasil = <span class="func">tambah</span>(5, 10) <span class="comment"># hasil = 15</span>
+                    </pre>
                 `
             }
         };
 
-        // State & Logic
-        let studentName = "";
-        let currentQ = 0;
+        // DATA KUIS
+        const quizData = [
+            { 
+                q: "Apa output dari kode berikut?<br><code>x = 10<br>if x > 15: print('A')<br>elif x > 5: print('B')<br>else: print('C')</code>", 
+                a: "B", 
+                o: ["A", "B", "C", "Error"], 
+                msg: "Tepat sekali! Karena 10 tidak lebih besar dari 15, maka sistem mengecek elif (10 > 5) yang bernilai True."
+            },
+            { 
+                q: "Keyword apa yang digunakan untuk 'Else If' di Python?", 
+                a: "elif", 
+                o: ["else if", "elseif", "elif", "if else"], 
+                msg: "Benar! 'elif' adalah singkatan khas Python untuk else if." 
+            },
+            { 
+                q: "Apa output dari <code>range(1, 4)</code> dalam perulangan for?", 
+                a: "1, 2, 3", 
+                o: ["1, 2, 3, 4", "1, 2, 3", "0, 1, 2, 3", "4, 4, 4"], 
+                msg: "Bagus! Fungsi range(start, stop) berhenti tepat sebelum angka stop dicapai." 
+            },
+            { 
+                q: "Bagaimana cara mendefinisikan fungsi di Python?", 
+                a: "def nama_fungsi():", 
+                o: ["function nama_fungsi():", "def nama_fungsi():", "create nama_fungsi():", "void nama_fungsi():"], 
+                msg: "Tepat! 'def' adalah singkatan dari define." 
+            },
+            { 
+                q: "Apa guna dari kata kunci <code>return</code> dalam fungsi?", 
+                a: "Mengirim nilai keluar fungsi", 
+                o: ["Mengulang fungsi", "Mengakhiri program", "Mengirim nilai keluar fungsi", "Mencetak teks"], 
+                msg: "Sangat benar! Return mengirimkan hasil pemrosesan kembali ke pemanggil fungsi." 
+            },
+            { 
+                q: "Manakah penulisan <code>while</code> loop yang benar?", 
+                a: "while x < 5:", 
+                o: ["while(x < 5) {}", "while x < 5:", "until x == 5:", "while x < 5 do"], 
+                msg: "Benar! Python menggunakan titik dua (:) di akhir pernyataan kondisi." 
+            },
+            { 
+                q: "Jika sebuah fungsi didefinisikan <code>def kali(a, b): return a * b</code>, berapa hasil dari <code>kali(2, 3)</code>?", 
+                a: "6", 
+                o: ["5", "23", "6", "Error"], 
+                msg: "Betul! Fungsi mengalikan parameter a dan b lalu mengembalikan hasilnya." 
+            },
+            { 
+                q: "Apa yang terjadi jika kita lupa menulis indentasi di Python?", 
+                a: "IndentationError", 
+                o: ["Program tetap jalan", "SyntaxError", "IndentationError", "LogicalError"], 
+                msg: "Tepat. Python sangat ketat terhadap spasi (indentasi)." 
+            },
+            { 
+                q: "Manakah loop yang digunakan jika jumlah perulangannya belum pasti?", 
+                a: "while", 
+                o: ["for", "while", "do-while", "foreach"], 
+                msg: "Benar! While dijalankan selama kondisi masih bernilai True." 
+            },
+            { 
+                q: "Simbol apa yang digunakan untuk memisahkan parameter dalam fungsi?", 
+                a: "Koma (,)", 
+                o: ["Titik koma (;)", "Koma (,)", "Spasi", "Titik (.)"], 
+                msg: "Luar biasa! Koma digunakan untuk memisahkan beberapa parameter." 
+            }
+        ];
+
+        // LOGIC APP
+        let currentName = "";
+        let currentIdx = 0;
         let score = 0;
-        let quizData = [];
+        let activeQuiz = [];
 
-        function toMateri() {
-            const input = document.getElementById('input-name');
-            if(input.value.length < 3) return alert("Masukkan nama lengkap yang valid!");
-            studentName = input.value;
-            document.getElementById('display-name').innerText = studentName;
-            document.getElementById('user-info').classList.remove('hidden');
-            showScreen('screen-materi');
+        function startJourney() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            if (nameInput.length < 3) {
+                alert("Silakan masukkan nama lengkap Anda terlebih dahulu.");
+                return;
+            }
+            currentName = nameInput;
+            document.getElementById('display-name').innerText = currentName;
+            document.getElementById('initial-name').innerText = currentName.charAt(0).toUpperCase();
+            document.getElementById('user-badge').classList.remove('hidden');
+            switchScreen('screen-materi');
         }
 
-        function showScreen(id) {
-            ['screen-welcome', 'screen-materi', 'screen-quiz', 'screen-result'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
-            });
-            document.getElementById(id).classList.remove('hidden');
+        function switchScreen(screenId) {
+            const screens = ['screen-welcome', 'screen-materi', 'screen-quiz', 'screen-result'];
+            screens.forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
         }
 
-        function openModal(key) {
-            const data = materiDetail[key];
-            document.getElementById('modal-header').className = "p-8 text-white " + (data.color.includes('gradient') ? data.color : data.color);
+        function showDetail(key) {
+            const data = pythonMateri[key];
             document.getElementById('modal-title').innerText = data.title;
-            document.getElementById('modal-content').innerHTML = data.text;
+            document.getElementById('modal-tag').innerText = data.tag;
+            document.getElementById('modal-body').innerHTML = data.content;
             document.getElementById('modal-materi').classList.remove('hidden');
         }
 
@@ -221,145 +375,129 @@
             document.getElementById('modal-materi').classList.add('hidden');
         }
 
-        function toQuiz() {
-            generateQuestions();
-            currentQ = 0;
+        function startQuiz() {
+            activeQuiz = [...quizData].sort(() => Math.random() - 0.5);
+            currentIdx = 0;
             score = 0;
             document.getElementById('quiz-progress-container').classList.remove('hidden');
-            showScreen('screen-quiz');
+            switchScreen('screen-quiz');
             loadQuestion();
         }
 
-        function generateQuestions() {
-            quizData = [];
-            for(let i=0; i<10; i++) {
-                const type = Math.floor(Math.random() * 3);
-                const val = Math.floor(Math.random() * 31) + 1; // Angka 1-32
-                let q, a, opts = [];
-
-                if(type === 0) { // Dec to Bin
-                    q = `Berapakah nilai Biner dari Desimal ${val}?`;
-                    a = val.toString(2);
-                } else if(type === 1) { // Bin to Dec
-                    const bin = val.toString(2);
-                    q = `Berapakah nilai Desimal dari Biner ${bin}?`;
-                    a = val.toString();
-                } else { // Dec to Hex
-                    const hexVal = val + 10;
-                    q = `Berapakah nilai Heksadesimal dari Desimal ${hexVal}?`;
-                    a = hexVal.toString(16).toUpperCase();
-                }
-
-                opts = [a];
-                while(opts.length < 4) {
-                    let rand = (Math.floor(Math.random() * 50)).toString(type === 0 ? 2 : (type === 2 ? 16 : 10)).toUpperCase();
-                    if(!opts.includes(rand)) opts.push(rand);
-                }
-                quizData.push({ q, a, options: opts.sort(() => Math.random() - 0.5) });
-            }
-        }
-
         function loadQuestion() {
-            const data = quizData[currentQ];
-            document.getElementById('q-num').innerText = currentQ + 1;
-            document.getElementById('q-text').innerText = data.q;
-            document.getElementById('q-score').innerText = score;
-            document.getElementById('quiz-progress-bar').style.width = ((currentQ + 1)/10 * 100) + "%";
-            document.getElementById('next-btn').classList.add('hidden');
-            document.getElementById('q-feedback').innerText = "";
+            const data = activeQuiz[currentIdx];
+            document.getElementById('q-idx').innerText = currentIdx + 1;
+            document.getElementById('q-text').innerHTML = data.q;
+            document.getElementById('current-score').innerText = score;
+            document.getElementById('quiz-progress-bar').style.width = `${((currentIdx + 1) / 10) * 100}%`;
 
-            const optContainer = document.getElementById('q-options');
-            optContainer.innerHTML = "";
-            data.options.forEach(opt => {
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = "";
+            data.o.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = "p-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-600 hover:border-indigo-300 transition-all text-lg";
+                btn.className = "w-full p-5 rounded-2xl border-2 border-slate-100 text-left font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50 transition-all card-hover";
                 btn.innerText = opt;
-                btn.onclick = (e) => checkAnswer(opt, e.target);
-                optContainer.appendChild(btn);
+                btn.onclick = () => checkAnswer(opt, btn);
+                grid.appendChild(btn);
             });
+
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('btn-next').classList.add('hidden');
         }
 
-        function checkAnswer(choice, btn) {
-            const correct = quizData[currentQ].a;
-            const allBtns = document.querySelectorAll('#q-options button');
+        function checkAnswer(selected, btn) {
+            const data = activeQuiz[currentIdx];
+            const options = document.querySelectorAll('#options-grid button');
+            const feedback = document.getElementById('feedback-area');
             
-            allBtns.forEach(b => b.disabled = true);
+            options.forEach(b => b.disabled = true);
+            feedback.classList.remove('hidden');
 
-            if(choice === correct) {
-                btn.classList.add('correct');
-                document.getElementById('q-feedback').innerHTML = "<span class='text-emerald-500'>✅ Jawaban Anda Benar!</span>";
+            if (selected === data.a) {
                 score++;
+                btn.className = "w-full p-5 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold text-left";
+                feedback.className = "p-6 rounded-2xl text-center font-bold text-lg bg-emerald-100 text-emerald-700 border-2 border-emerald-200 animate-fade";
+                feedback.innerText = "✨ " + data.msg;
             } else {
-                btn.classList.add('wrong');
-                document.getElementById('q-feedback').innerHTML = `<span class='text-red-500'>❌ Salah. Jawaban benar: ${correct}</span>`;
-                allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+                btn.className = "w-full p-5 rounded-2xl border-2 border-red-500 bg-red-50 text-red-700 font-bold text-left";
+                feedback.className = "p-6 rounded-2xl text-center font-bold text-lg bg-red-100 text-red-700 border-2 border-red-200 animate-fade";
+                feedback.innerHTML = `❌ Kurang tepat. Jawaban yang benar adalah: <span class="underline">${data.a}</span>`;
             }
-            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('btn-next').classList.remove('hidden');
         }
 
         function nextQuestion() {
-            currentQ++;
-            if(currentQ < 10) loadQuestion();
-            else finishQuiz();
+            currentIdx++;
+            if (currentIdx < 10) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
         }
 
         function finishQuiz() {
             document.getElementById('quiz-progress-container').classList.add('hidden');
-            document.getElementById('res-name').innerText = studentName;
-            document.getElementById('res-score').innerText = score;
-            showScreen('screen-result');
+            document.getElementById('res-name').innerText = currentName;
+            document.getElementById('res-score').innerText = score * 10;
+            switchScreen('screen-result');
         }
 
-        async function downloadPDF() {
+        async function downloadCert() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             const w = doc.internal.pageSize.getWidth();
             const h = doc.internal.pageSize.getHeight();
 
-            // Desain Sertifikat
+            // Background & Border
             doc.setFillColor(248, 250, 252);
             doc.rect(0, 0, w, h, 'F');
-            doc.setDrawColor(79, 70, 229);
-            doc.setLineWidth(5);
-            doc.rect(10, 10, w-20, h-20);
-            
+            doc.setDrawColor(59, 130, 246);
+            doc.setLineWidth(4);
+            doc.rect(10, 10, w - 20, h - 20);
+            doc.setLineWidth(1);
+            doc.rect(12, 12, w - 24, h - 24);
+
+            // Title
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(45);
+            doc.setFontSize(48);
             doc.setTextColor(30, 41, 59);
-            doc.text("SERTIFIKAT KELULUSAN", w/2, 50, { align: "center" });
-
-            doc.setFontSize(18);
-            doc.setTextColor(100);
-            doc.setFont("helvetica", "normal");
-            doc.text("Sertifikat ini diberikan sebagai bukti kompetensi kepada:", w/2, 70, { align: "center" });
-
-            doc.setFontSize(35);
-            doc.setTextColor(79, 70, 229);
-            doc.setFont("helvetica", "bold");
-            doc.text(studentName.toUpperCase(), w/2, 95, { align: "center" });
+            doc.text("SERTIFIKAT KOMPETENSI", w / 2, 55, { align: "center" });
 
             doc.setFontSize(16);
-            doc.setTextColor(50);
+            doc.setTextColor(100, 116, 139);
             doc.setFont("helvetica", "normal");
-            doc.text(`Telah menyelesaikan Materi Konversi Sistem Bilangan dengan Skor Akhir:`, w/2, 115, { align: "center" });
-            
-            doc.setFontSize(24);
-            doc.text(`${score} / 10 Soal Benar`, w/2, 130, { align: "center" });
+            doc.text("DIBERIKAN KEPADA:", w / 2, 75, { align: "center" });
 
-            doc.setFontSize(14);
-            const tgl = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-            doc.text(`Diterbitkan pada: ${tgl}`, w/2, 150, { align: "center" });
-
-            // Tanda Tangan
-            doc.setDrawColor(0);
-            doc.setLineWidth(0.5);
-            doc.line(w/2 - 40, 180, w/2 + 40, 180);
+            // Name
+            doc.setFontSize(36);
+            doc.setTextColor(59, 130, 246);
             doc.setFont("helvetica", "bold");
-            doc.text("Natalia Matondang", w/2, 188, { align: "center" });
-            doc.setFont("helvetica", "normal");
-            doc.text("Guru Informatika", w/2, 195, { align: "center" });
+            doc.text(currentName.toUpperCase(), w / 2, 95, { align: "center" });
 
-            doc.save(`Sertifikat_${studentName}.pdf`);
+            // Description
+            doc.setFontSize(16);
+            doc.setTextColor(51, 65, 85);
+            doc.setFont("helvetica", "normal");
+            const text = `Telah berhasil menyelesaikan Pelatihan Logika Dasar Python\n(Conditional, Looping, & Functions) dengan skor akhir: ${score * 10}/100`;
+            doc.text(text, w / 2, 115, { align: "center" });
+
+            // Footer / Date
+            const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            doc.setFontSize(12);
+            doc.text(`Jakarta, ${today}`, w / 2, 145, { align: "center" });
+
+            // Signature
+            doc.setDrawColor(30, 41, 59);
+            doc.line(w / 2 - 40, 175, w / 2 + 40, 175);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("NATALIA MATONDANG", w / 2, 182, { align: "center" });
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.text("Guru Pendamping Informatika", w / 2, 188, { align: "center" });
+
+            // Save PDF
+            doc.save(`Sertifikat_Python_${currentName.replace(/\s+/g, '_')}.pdf`);
         }
     </script>
 </body>
